@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Parent Project Information -->
+    <groupId>com.flowforge</groupId>
+    <artifactId>flowforge-parent</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>FlowForge Parent</name>
+    <description>Parent POM for the FlowForge Microservices Project</description>
+
+    <!-- This is where all child modules are listed -->
+    <modules>
+        <module>common</module>
+        <module>auth</module>
+        <module>workflow</module>
+        <module>trigger</module>
+        <module>orchestrator</module>
+        <module>executor</module>
+        <module>log</module>
+    </modules>
+
+    <!-- Inherit defaults from Spring Boot -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.7</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+
+    <!-- Centralized Properties -->
+    <properties>
+        <java.version>25</java.version>
+    </properties>
+
+    <!--
+      Dependency Management Section:
+      This controls the versions of dependencies for all child modules.
+      Children can declare a dependency WITHOUT specifying the version.
+    -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- Define the version for our own common library -->
+            <dependency>
+                <groupId>com.flowforge</groupId>
+                <artifactId>common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+</project>
