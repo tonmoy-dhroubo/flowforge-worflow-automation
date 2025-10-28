@@ -8,8 +8,7 @@
 		<version>0.0.1-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath> <!-- Points to the root pom -->
 	</parent>
-	<groupId>com.flowforge</groupId>
-	<artifactId>log</artifactId>
+    <artifactId>log</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>log</name>
 	<description>Workflow Automation</description>
