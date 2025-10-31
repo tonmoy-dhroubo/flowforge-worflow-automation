@@ -1,32 +1,8 @@
-server:
-  port: 8082
-
 spring:
   application:
     name: workflow-service
-  datasource:
-    url: jdbc:postgresql://localhost:5432/flowforge_workflow
-    username: your_postgres_user
-    password: your_postgres_password
-    driver-class-name: org.postgresql.Driver
-  jpa:
-    hibernate:
-      ddl-auto: validate # Use validate since Flyway handles schema creation
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
+  profiles:
+    active: dev
 
-# Custom application properties
-application:
-  security:
-    jwt:
-      secret-key: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970 # Replace with a real, strong secret
-      # Access token: short-lived (e.g., 1 hour = 3600000 ms)
-      expiration: 3600000
-      # Refresh token: long-lived (e.g., 7 days = 604800000 ms)
-      refresh-token:
-        expiration: 604800000
+server:
+  port: 8082

@@ -4,12 +4,15 @@ server:
 spring:
   application:
     name: auth-service
-  profiles:
-    active: dev
+  datasource:
+    url: jdbc:postgresql://ep-weathered-brook-a1acuul3-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channelBinding=require
+    username: neondb_owner
+    password: npg_X9HSLpE0jWdb
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: validate  # Default to validate for safety, override in profile-specific configs
-    show-sql: false       # Default to false, enable in dev if needed
+      ddl-auto: update
+    show-sql: true
     properties:
       hibernate:
-        format_sql: false  # Default to false, enable in dev if needed
+        format_sql: true

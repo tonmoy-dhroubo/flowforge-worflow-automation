@@ -5,7 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.List;
@@ -27,23 +28,28 @@ public class Workflow {
     @Column(nullable = false)
     private String name;
 
-    private String description;
+    @Column(nullable = false, updatable = false)
+    private UUID userId;
 
-    @Type(io.hypersistence.utils.hibernate.type.json.JsonType.class)
+    @Builder.Default
+    private boolean enabled = true;
+
+    // --- THIS IS THE CHANGE ---
+    // Instead of String, we use a native Java type.
+    // Hibernate 6 handles the JSON conversion automatically with this annotation.
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private Map<String, Object> triggerDefinition;
 
-    @Type(io.hypersistence.utils.hibernate.type.json.JsonType.class)
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
-    private List<Map<String, Object>> actionDefinitions;
+    private List<Map<String, Object>> actionsDefinition;
+    // --- END OF CHANGE ---
 
-    @Column(name = "user_id", nullable = false)
-    private UUID userId;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(nullable = false)
     private Instant updatedAt;
 
     @PrePersist

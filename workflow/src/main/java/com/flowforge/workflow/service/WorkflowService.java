@@ -1,20 +1,16 @@
 package com.flowforge.workflow.service;
 
-import com.flowforge.workflow.dto.WorkflowRequestDTO;
-import com.flowforge.workflow.dto.WorkflowResponseDTO;
+import com.flowforge.workflow.dto.WorkflowRequest;
+import com.flowforge.workflow.dto.WorkflowResponse;
+import com.flowforge.workflow.dto.WorkflowSummary;
 
 import java.util.List;
 import java.util.UUID;
 
 public interface WorkflowService {
-
-    WorkflowResponseDTO createWorkflow(WorkflowRequestDTO request, UUID userId);
-
-    WorkflowResponseDTO getWorkflowById(UUID id, UUID userId);
-
-    List<WorkflowResponseDTO> getWorkflowsByUserId(UUID userId);
-
-    WorkflowResponseDTO updateWorkflow(UUID id, WorkflowRequestDTO request, UUID userId);
-
-    void deleteWorkflow(UUID id, UUID userId);
+    WorkflowResponse createWorkflow(WorkflowRequest request, UUID userId);
+    List<WorkflowSummary> getWorkflowsForUser(UUID userId);
+    WorkflowResponse getWorkflowByIdAndUser(UUID workflowId, UUID userId);
+    WorkflowResponse updateWorkflow(UUID workflowId, WorkflowRequest request, UUID userId);
+    void deleteWorkflow(UUID workflowId, UUID userId);
 }
