@@ -1,5 +1,6 @@
 package com.flowforge.auth.service;
 
+import com.flowforge.auth.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -34,8 +35,11 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    public String generateToken(UserDetails userDetails) {
-        return buildToken(new HashMap<>(), userDetails, jwtExpiration);
+    public String generateToken(User user) { // Pass the full User object
+        Map<String, Object> extraClaims = new HashMap<>();
+        extraClaims.put("user_id", user.getId().toString()); // <-- THE CRITICAL ADDITION
+
+        return buildToken(extraClaims, user, jwtExpiration);
     }
 
     public String generateRefreshToken(UserDetails userDetails) {
@@ -48,7 +52,7 @@ public class JwtService {
             long expiration
     ) {
         return Jwts.builder()
-                .setClaims(extraClaims)
+                .setClaims(extraClaims) // <-- Add the extra claims
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))

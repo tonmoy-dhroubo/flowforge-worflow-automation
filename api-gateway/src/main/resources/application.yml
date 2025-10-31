@@ -1,0 +1,53 @@
+server:
+  port: 8080 # The single public entry point for the entire application
+
+spring:
+  application:
+    name: api-gateway-service
+  cloud:
+    gateway:
+      # --- ROUTING CONFIGURATION ---
+      routes:
+        # Route requests for authentication to the auth-service
+        # These routes are considered public and will be skipped by our auth filter.
+        - id: auth-service-public
+          uri: lb://AUTH-SERVICE # 'lb' stands for load-balanced, uses service discovery
+          predicates:
+            - Path=/auth/register, /auth/login, /auth/refresh-token
+
+        # Route ALL other requests to /auth/** to the auth-service, but protect them
+        - id: auth-service-protected
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/auth/**
+          filters:
+            - AuthenticationFilter # Apply our custom JWT validation filter
+
+        # Route requests for workflows to the workflow-service
+        - id: workflow-service
+          uri: lb://WORKFLOW-SERVICE
+          predicates:
+            - Path=/api/v1/workflows/**
+          filters:
+            - AuthenticationFilter # Apply our custom JWT validation filter
+
+      # --- GLOBAL CORS CONFIGURATION ---
+      # This allows a web frontend (e.g., from localhost:3000) to call the API
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*" # In production, restrict this to your frontend's domain
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+
+# --- SECURITY CONFIGURATION ---
+application:
+  security:
+    jwt:
+      # THIS SECRET KEY MUST BE THE SAME AS THE ONE IN AUTH-SERVICE
+      secret-key: ${JWT_SECRET_KEY:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}

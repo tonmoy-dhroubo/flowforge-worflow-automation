@@ -20,6 +20,7 @@
         <module>orchestrator</module>
         <module>executor</module>
         <module>log</module>
+        <module>api-gateway</module>
     </modules>
 
     <!-- Inherit defaults from Spring Boot -->
