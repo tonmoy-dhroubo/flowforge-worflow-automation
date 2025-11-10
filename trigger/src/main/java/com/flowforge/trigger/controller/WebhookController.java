@@ -1,141 +1,156 @@
 package com.flowforge.trigger.controller;
 
-import com.flowforge.trigger.dto.TriggerEvent;
-import com.flowforge.trigger.dto.WebhookRequest;
-import com.flowforge.trigger.dto.WebhookResponse;
+import com.flowforge.trigger.dto.WebhookPayloadDto;
+import com.flowforge.trigger.entity.TriggerRegistration;
+import com.flowforge.trigger.repository.TriggerRegistrationRepository;
 import com.flowforge.trigger.service.TriggerService;
+import com.flowforge.trigger.service.WebhookTriggerService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.servlet.http.HttpServletRequest;
-import java.time.Instant;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
+/**
+ * Controller for handling incoming webhook requests.
+ * Each workflow with a webhook trigger gets a unique URL.
+ */
 @RestController
-@RequestMapping("/api/v1/webhooks")
+@RequestMapping("/webhook")
 @RequiredArgsConstructor
 @Slf4j
 public class WebhookController {
 
+    private final TriggerRegistrationRepository triggerRepository;
+    private final WebhookTriggerService webhookTriggerService;
     private final TriggerService triggerService;
 
     /**
-     * Generic webhook endpoint that accepts any event
+     * Handles incoming webhook requests.
+     * The webhook token is part of the URL path.
      */
-    @PostMapping("/{workflowId}")
-    public ResponseEntity<WebhookResponse> handleWebhook(
-            @PathVariable String workflowId,
-            @RequestBody(required = false) Map<String, Object> payload,
+    @PostMapping("/{webhookToken}")
+    public ResponseEntity<Map<String, Object>> handleWebhook(
+            @PathVariable String webhookToken,
+            @RequestBody(required = false) Map<String, Object> body,
             HttpServletRequest request) {
-        
-        log.info("Received webhook for workflow: {}", workflowId);
 
-        // Extract headers
+        log.info("Received webhook request: token={}, method={}", 
+                webhookToken, request.getMethod());
+
+        try {
+            // Find trigger by webhook token
+            TriggerRegistration trigger = triggerRepository.findByWebhookToken(webhookToken)
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid webhook token"));
+
+            // Build webhook payload
+            WebhookPayloadDto payload = WebhookPayloadDto.builder()
+                    .headers(extractHeaders(request))
+                    .queryParams(extractQueryParams(request))
+                    .body(body != null ? body : new HashMap<>())
+                    .method(request.getMethod())
+                    .remoteAddress(request.getRemoteAddr())
+                    .build();
+
+            // Process the webhook
+            webhookTriggerService.processWebhookRequest(trigger, payload);
+
+            // Mark trigger as fired
+            triggerService.markTriggerFired(trigger.getId());
+
+            // Return success response
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Webhook received and processing");
+            response.put("triggerId", trigger.getId());
+
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException e) {
+            log.warn("Invalid webhook request: {}", e.getMessage());
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+
+        } catch (Exception e) {
+            log.error("Error processing webhook: {}", e.getMessage(), e);
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("error", "Internal server error");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    /**
+     * Handles GET requests to webhooks (for simple triggers like status checks)
+     */
+    @GetMapping("/{webhookToken}")
+    public ResponseEntity<Map<String, Object>> handleWebhookGet(
+            @PathVariable String webhookToken,
+            HttpServletRequest request) {
+
+        log.info("Received webhook GET request: token={}", webhookToken);
+
+        try {
+            TriggerRegistration trigger = triggerRepository.findByWebhookToken(webhookToken)
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid webhook token"));
+
+            WebhookPayloadDto payload = WebhookPayloadDto.builder()
+                    .headers(extractHeaders(request))
+                    .queryParams(extractQueryParams(request))
+                    .body(new HashMap<>())
+                    .method("GET")
+                    .remoteAddress(request.getRemoteAddr())
+                    .build();
+
+            webhookTriggerService.processWebhookRequest(trigger, payload);
+            triggerService.markTriggerFired(trigger.getId());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Webhook received");
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("Error processing GET webhook: {}", e.getMessage(), e);
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+
+    /**
+     * Extracts HTTP headers from the request
+     */
+    private Map<String, String> extractHeaders(HttpServletRequest request) {
         Map<String, String> headers = new HashMap<>();
-        request.getHeaderNames().asIterator()
-            .forEachRemaining(name -> headers.put(name, request.getHeader(name)));
-
-        // Create trigger event
-        String eventId = UUID.randomUUID().toString();
-        TriggerEvent event = TriggerEvent.builder()
-                .eventId(eventId)
-                .triggerType("webhook")
-                .payload(payload != null ? payload : new HashMap<>())
-                .metadata(Map.of(
-                    "workflowId", workflowId,
-                    "method", request.getMethod(),
-                    "remoteAddr", request.getRemoteAddr(),
-                    "contentType", request.getContentType() != null ? request.getContentType() : "unknown"
-                ))
-                .timestamp(Instant.now())
-                .build();
-
-        // Send to Kafka
-        triggerService.processTrigger(event);
-
-        WebhookResponse response = WebhookResponse.builder()
-                .eventId(eventId)
-                .status("accepted")
-                .message("Webhook received and queued for processing")
-                .build();
-
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
-    }
-
-    /**
-     * Named event webhook endpoint
-     */
-    @PostMapping("/events/{eventName}")
-    public ResponseEntity<WebhookResponse> handleNamedEvent(
-            @PathVariable String eventName,
-            @RequestBody WebhookRequest webhookRequest) {
+        Enumeration<String> headerNames = request.getHeaderNames();
         
-        log.info("Received named event: {}", eventName);
-
-        String eventId = UUID.randomUUID().toString();
-        TriggerEvent event = TriggerEvent.builder()
-                .eventId(eventId)
-                .triggerType("webhook." + eventName)
-                .payload(webhookRequest.getData() != null ? webhookRequest.getData() : new HashMap<>())
-                .metadata(Map.of(
-                    "eventName", eventName,
-                    "requestEvent", webhookRequest.getEvent() != null ? webhookRequest.getEvent() : "unknown"
-                ))
-                .timestamp(Instant.now())
-                .build();
-
-        triggerService.processTrigger(event);
-
-        WebhookResponse response = WebhookResponse.builder()
-                .eventId(eventId)
-                .status("accepted")
-                .message("Event received and queued for processing")
-                .build();
-
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
+        while (headerNames.hasMoreElements()) {
+            String headerName = headerNames.nextElement();
+            headers.put(headerName, request.getHeader(headerName));
+        }
+        
+        return headers;
     }
 
     /**
-     * Health check endpoint
+     * Extracts query parameters from the request
      */
-    @GetMapping("/health")
-    public ResponseEntity<Map<String, String>> healthCheck() {
-        return ResponseEntity.ok(Map.of(
-            "status", "UP",
-            "service", "trigger-service",
-            "timestamp", Instant.now().toString()
-        ));
-    }
-
-    /**
-     * Test webhook endpoint (for testing purposes)
-     */
-    @PostMapping("/test")
-    public ResponseEntity<WebhookResponse> testWebhook(@RequestBody Map<String, Object> payload) {
-        log.info("Received test webhook");
-
-        String eventId = UUID.randomUUID().toString();
-        TriggerEvent event = TriggerEvent.builder()
-                .eventId(eventId)
-                .triggerType("webhook.test")
-                .payload(payload)
-                .metadata(Map.of("test", "true"))
-                .timestamp(Instant.now())
-                .build();
-
-        triggerService.processTrigger(event);
-
-        WebhookResponse response = WebhookResponse.builder()
-                .eventId(eventId)
-                .status("accepted")
-                .message("Test webhook processed successfully")
-                .build();
-
-        return ResponseEntity.ok(response);
+    private Map<String, String> extractQueryParams(HttpServletRequest request) {
+        Map<String, String> params = new HashMap<>();
+        request.getParameterMap().forEach((key, values) -> {
+            if (values.length > 0) {
+                params.put(key, values[0]);
+            }
+        });
+        return params;
     }
 }

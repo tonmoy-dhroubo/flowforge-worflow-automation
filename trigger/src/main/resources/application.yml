@@ -4,6 +4,18 @@ server:
 spring:
   application:
     name: trigger-service
+  profiles:
+    active:
+      dev
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
   # Kafka Configuration
   kafka:
@@ -16,17 +28,55 @@ spring:
       properties:
         enable.idempotence: true
         max.in.flight.requests.per.connection: 5
+        spring.json.add.type.headers: false
+
+  # Email Configuration (for email triggers)
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:your-email@gmail.com}
+    password: ${MAIL_PASSWORD:your-app-password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+        transport:
+          protocol: smtp
 
 # Kafka Topics Configuration
 kafka:
   topic:
     trigger-events: trigger.events
 
-# Plugin Configuration
-plugins:
-  dir: ${PLUGINS_DIR:./plugins/triggers}
-  auto-reload: ${PLUGINS_AUTO_RELOAD:false}
-  scan-interval: ${PLUGINS_SCAN_INTERVAL:60} # seconds
+# Scheduler Configuration
+scheduler:
+  enabled: true
+  # How often to check for scheduled triggers (in milliseconds)
+  check-interval: 60000 # 1 minute
+  # Thread pool size for executing scheduled triggers
+  thread-pool-size: 5
+
+# Email Polling Configuration (for email triggers)
+email:
+  polling:
+    enabled: true
+    # How often to check for new emails (in milliseconds)
+    check-interval: 300000 # 5 minutes
+    # IMAP configuration
+    imap:
+      host: ${IMAP_HOST:imap.gmail.com}
+      port: ${IMAP_PORT:993}
+      protocol: imaps
+
+# Webhook Configuration
+webhook:
+  # Base URL for webhook endpoints
+  base-url: ${WEBHOOK_BASE_URL:http://localhost:8083}
+  # Token expiry time in days
+  token-expiry-days: 365
 
 # Logging Configuration
 logging:
@@ -34,6 +84,8 @@ logging:
     com.flowforge.trigger: DEBUG
     org.springframework.kafka: INFO
     org.apache.kafka: WARN
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
@@ -43,7 +95,15 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus,plugins
+        include: health,info,metrics,prometheus
   endpoint:
     health:
       show-details: always
+
+# Application Security
+application:
+  security:
+    # Allow webhook endpoints to be accessed without authentication
+    public-endpoints:
+      - /webhook/**
+      - /actuator/**
