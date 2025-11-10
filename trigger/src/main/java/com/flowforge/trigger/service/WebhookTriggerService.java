@@ -3,6 +3,7 @@ package com.flowforge.trigger.service;
 import com.flowforge.trigger.dto.WebhookPayloadDto;
 import com.flowforge.trigger.entity.TriggerRegistration;
 import com.flowforge.trigger.event.TriggerEvent;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +13,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Enumeration;
 
 /**
  * Service for handling webhook triggers.
@@ -100,5 +102,33 @@ public class WebhookTriggerService {
         metadata.put("method", payload.getMethod());
         metadata.put("receivedAt", Instant.now().toString());
         return metadata;
+    }
+
+    /**
+     * Extracts HTTP headers from the request.
+     * Moved from controller to centralize webhook request parsing here.
+     */
+    public Map<String, String> extractHeaders(HttpServletRequest request) {
+        Map<String, String> headers = new HashMap<>();
+        Enumeration<String> headerNames = request.getHeaderNames();
+        while (headerNames.hasMoreElements()) {
+            String headerName = headerNames.nextElement();
+            headers.put(headerName, request.getHeader(headerName));
+        }
+        return headers;
+    }
+
+    /**
+     * Extracts query parameters from the request.
+     * Moved from controller to centralize webhook request parsing here.
+     */
+    public Map<String, String> extractQueryParams(HttpServletRequest request) {
+        Map<String, String> params = new HashMap<>();
+        request.getParameterMap().forEach((key, values) -> {
+            if (values.length > 0) {
+                params.put(key, values[0]);
+            }
+        });
+        return params;
     }
 }

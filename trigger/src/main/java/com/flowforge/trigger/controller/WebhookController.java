@@ -12,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,8 +49,8 @@ public class WebhookController {
 
             // Build webhook payload
             WebhookPayloadDto payload = WebhookPayloadDto.builder()
-                    .headers(extractHeaders(request))
-                    .queryParams(extractQueryParams(request))
+                    .headers(webhookTriggerService.extractHeaders(request))
+                    .queryParams(webhookTriggerService.extractQueryParams(request))
                     .body(body != null ? body : new HashMap<>())
                     .method(request.getMethod())
                     .remoteAddress(request.getRemoteAddr())
@@ -102,8 +101,8 @@ public class WebhookController {
                     .orElseThrow(() -> new IllegalArgumentException("Invalid webhook token"));
 
             WebhookPayloadDto payload = WebhookPayloadDto.builder()
-                    .headers(extractHeaders(request))
-                    .queryParams(extractQueryParams(request))
+                    .headers(webhookTriggerService.extractHeaders(request))
+                    .queryParams(webhookTriggerService.extractQueryParams(request))
                     .body(new HashMap<>())
                     .method("GET")
                     .remoteAddress(request.getRemoteAddr())
@@ -124,33 +123,5 @@ public class WebhookController {
             error.put("error", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
-    }
-
-    /**
-     * Extracts HTTP headers from the request
-     */
-    private Map<String, String> extractHeaders(HttpServletRequest request) {
-        Map<String, String> headers = new HashMap<>();
-        Enumeration<String> headerNames = request.getHeaderNames();
-        
-        while (headerNames.hasMoreElements()) {
-            String headerName = headerNames.nextElement();
-            headers.put(headerName, request.getHeader(headerName));
-        }
-        
-        return headers;
-    }
-
-    /**
-     * Extracts query parameters from the request
-     */
-    private Map<String, String> extractQueryParams(HttpServletRequest request) {
-        Map<String, String> params = new HashMap<>();
-        request.getParameterMap().forEach((key, values) -> {
-            if (values.length > 0) {
-                params.put(key, values[0]);
-            }
-        });
-        return params;
     }
 }
