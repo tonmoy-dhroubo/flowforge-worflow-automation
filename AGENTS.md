@@ -1,16 +1,29 @@
-THIS IS THE OUTPUT OF AN GEMINI AI CHAT AFTER ASKING WHAT IS YET TO BE IMPLEMENTED IN THIS PROJECT
+# Repository Guidelines
 
+## Project Structure & Module Organization
+This is a multi-module Spring Boot workspace. Top-level modules include `auth`, `workflow`, `trigger`, `orchestrator`, `executor`, `log`, `api-gateway`, and `common`. Each service follows the standard Maven layout (`src/main/java`, `src/main/resources`, `src/test/java`). Configuration lives in each service under `src/main/resources/application.yml`. Kafka topics and service URLs are centralized per service config.
 
+## Build, Test, and Development Commands
+Use Maven Wrapper per module:
+- Build a service: `cd auth; mvnw.cmd clean package`
+- Run a service: `cd orchestrator; mvnw.cmd spring-boot:run`
+- Run all tests in a service: `cd trigger; mvnw.cmd test`
+Root build (all modules): `mvnw.cmd clean package` from the repo root.
 
-Yes, looking at the provided code, there are three critical functional gaps and one logical gap that need to be addressed to make this a truly functional workflow automation system.
-1. Missing Email Polling Logic (trigger-service)
-You have an EmailTriggerService that knows how to process an email, but nothing actually connects to the email server to fetch them. The ScheduledTriggerExecutor only handles time-based triggers. You need an IMAP poller.
-2. Missing Data Context Propagation (orchestrator & executor)
-Currently, the Orchestrator passes triggerPayload to the Executor. However, in a real workflow, Step 2 often needs data from Step 1 (e.g., "Take the row ID from Google Sheets and send it to Slack").
-Current state: Actions only see the initial trigger data.
-Required state: Actions should see Trigger Data + All Previous Step Outputs.
-3. Action Plugins are Mocks (executor)
-The SlackAction and GoogleSheetsAction currently just print logs (log.info("[MOCK SLACK]...")). They do not actually make HTTP requests to Slack or Google.
+## Coding Style & Naming Conventions
+Java: 4-space indentation, standard Spring conventions. Class names are `PascalCase`, methods/fields `camelCase`, constants `UPPER_SNAKE_CASE`. Keep DTOs in `dto/`, entities in `entity/`, and Kafka components in `kafka/`. Avoid Unicode in source files.
 
+## Testing Guidelines
+Frameworks: JUnit 5 with Spring Boot Test. Name tests `*Test.java` and place them under `src/test/java` in each module. Prefer service-level tests for business logic and controller tests for API edges. Run with `mvnw.cmd test` in the target module.
 
-If you agree, implement those
+## Commit & Pull Request Guidelines
+Commit messages in this repo are short and imperative (e.g., “Implement email polling…”). Keep commits focused to a single logical change. PRs should include:
+- Clear summary and scope
+- How to run or verify (commands)
+- Config changes or required env vars
+
+## Security & Configuration Tips
+Local defaults are set in `application.yml`, but secrets should come from env vars. Common envs:
+- `SPRING_PROFILES_ACTIVE`
+- `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`
+- `APPLICATION_SECURITY_JWT_SECRET_KEY`
