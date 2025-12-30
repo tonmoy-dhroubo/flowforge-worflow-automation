@@ -2,7 +2,22 @@ spring:
   application:
     name: workflow-service
   profiles:
-    active: dev
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/flowforge}
+    username: ${SPRING_DATASOURCE_USERNAME:flowforge}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: workflow
+        hbm2ddl:
+          create_namespaces: true
 
 server:
   port: 8082

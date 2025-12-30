@@ -14,4 +14,5 @@ public class ExecutionStartDto {
     private String actionType;
     private Map<String, Object> actionConfig;
     private Map<String, Object> triggerPayload;
+    private Map<String, Object> context;
 }

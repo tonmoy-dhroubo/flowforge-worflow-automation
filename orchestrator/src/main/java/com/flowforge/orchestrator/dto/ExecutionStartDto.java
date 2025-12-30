@@ -14,4 +14,5 @@ public class ExecutionStartDto {
     private String actionType;
     private Map<String, Object> actionConfig;
     private Map<String, Object> triggerPayload; // Data from the original trigger
+    private Map<String, Object> context; // Trigger data + prior step outputs
 }

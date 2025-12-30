@@ -15,6 +15,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -109,6 +110,10 @@ public class OrchestrationService {
 
         ActionDto nextAction = actions.get(currentStepIndex);
 
+        Map<String, Object> context = new HashMap<>();
+        context.put("trigger", execution.getTriggerPayload());
+        context.put("steps", execution.getStepOutputs());
+
         ExecutionStartDto startDto = ExecutionStartDto.builder()
                 .executionId(execution.getId())
                 .workflowId(execution.getWorkflowId())
@@ -116,6 +121,7 @@ public class OrchestrationService {
                 .actionType(nextAction.getType())
                 .actionConfig(nextAction.getConfig())
                 .triggerPayload(execution.getTriggerPayload())
+                .context(context)
                 .build();
 
         executionStartProducer.sendExecutionStartEvent(startDto);

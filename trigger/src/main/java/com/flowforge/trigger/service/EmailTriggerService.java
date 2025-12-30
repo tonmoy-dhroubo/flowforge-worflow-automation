@@ -35,11 +35,20 @@ public class EmailTriggerService {
 
         // Validate email configuration
         Map<String, Object> config = trigger.getConfiguration();
-        if (!config.containsKey("emailAddress")) {
-            throw new IllegalArgumentException("Email trigger requires 'emailAddress' in configuration");
+        if (config == null) {
+            throw new IllegalArgumentException("Email trigger requires configuration");
         }
 
-        log.info("Email trigger configured for address: {}", config.get("emailAddress"));
+        String username = stringValue(config, "username", "emailAddress");
+        String password = stringValue(config, "password");
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException("Email trigger requires 'username' or 'emailAddress' in configuration");
+        }
+        if (password == null || password.isBlank()) {
+            throw new IllegalArgumentException("Email trigger requires 'password' in configuration");
+        }
+
+        log.info("Email trigger configured for address: {}", username);
         return trigger;
     }
 
@@ -162,5 +171,15 @@ public class EmailTriggerService {
                 email.getHeader("Message-ID")[0] : null);
         metadata.put("receivedAt", Instant.now().toString());
         return metadata;
+    }
+
+    private String stringValue(Map<String, Object> config, String... keys) {
+        for (String key : keys) {
+            Object value = config.get(key);
+            if (value != null) {
+                return String.valueOf(value);
+            }
+        }
+        return null;
     }
 }
