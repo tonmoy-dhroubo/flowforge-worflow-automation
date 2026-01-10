@@ -19,7 +19,6 @@ public class WorkflowController {
 
     private final WorkflowService workflowService;
 
-    // A constant for the header name provided by the API Gateway
     private static final String USER_ID_HEADER = "X-User-Id";
 
     @PostMapping

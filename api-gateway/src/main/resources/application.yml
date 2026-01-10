@@ -1,5 +1,5 @@
 server:
-  port: 8080 # The single public entry point for the entire application
+  port: 8080
 
 spring:
   application:
@@ -8,40 +8,33 @@ spring:
     gateway:
       server:
         webflux:
-          # --- ROUTING CONFIGURATION ---
           routes:
-            # Route requests for authentication to the auth-service
-            # These routes are considered public and will be skipped by our auth filter.
             - id: auth-service-public
               uri: http://localhost:8081
               predicates:
                 - Path=/auth/register, /auth/login, /auth/refresh-token
 
-            # Route ALL other requests to /auth/** to the auth-service, but protect them
             - id: auth-service-protected
               uri: http://localhost:8081
               predicates:
                 - Path=/auth/**
               filters:
-                - AuthenticationFilter # Apply our custom JWT validation filter
+                - AuthenticationFilter
 
-            # Route requests for workflows to the workflow-service
             - id: workflow-service
               uri: http://localhost:8082
               predicates:
                 - Path=/api/v1/workflows/**
               filters:
-                - AuthenticationFilter # Apply our custom JWT validation filter
+                - AuthenticationFilter
 
-            # Route requests for triggers to the trigger-service
             - id: trigger-service
               uri: http://localhost:8083
               predicates:
                 - Path=/api/v1/triggers/**, /webhook/**
               filters:
-                - AuthenticationFilter # Protect management, not webhooks (the filter handles this)
+                - AuthenticationFilter
 
-            # Route requests for orchestration/executions to the orchestrator-service
             - id: orchestrator-service
               uri: http://localhost:8084
               predicates:
@@ -49,7 +42,6 @@ spring:
               filters:
                 - AuthenticationFilter
 
-            # Route requests for executor info/control to the executor-service
             - id: executor-service
               uri: http://localhost:8085
               predicates:
@@ -57,7 +49,6 @@ spring:
               filters:
                 - AuthenticationFilter
 
-            # Route requests for logs to the log-service
             - id: log-service
               uri: http://localhost:8086
               predicates:
@@ -65,12 +56,10 @@ spring:
               filters:
                 - AuthenticationFilter
 
-          # --- GLOBAL CORS CONFIGURATION ---
-          # This allows a web frontend (e.g., from localhost:3000) to call the API
           globalcors:
             cors-configurations:
               '[/**]':
-                allowedOrigins: "*" # In production, restrict this to your frontend's domain
+                allowedOrigins: "*"
                 allowedMethods:
                   - GET
                   - POST
@@ -79,17 +68,12 @@ spring:
                   - OPTIONS
                 allowedHeaders: "*"
 
-# --- SECURITY CONFIGURATION ---
 application:
   security:
     jwt:
-      # THIS SECRET KEY MUST BE THE SAME AS THE ONE IN AUTH-SERVICE
       secret-key: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
 
-# Add this to the end of your api-gateway application.yml
 logging:
   level:
-    # This will print extremely detailed info about the security filter chain
     org.springframework.security: TRACE
-    # This will show details about gateway routing
     org.springframework.cloud.gateway: TRACE

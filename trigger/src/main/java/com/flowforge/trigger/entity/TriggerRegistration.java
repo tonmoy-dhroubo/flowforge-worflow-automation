@@ -11,10 +11,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-/**
- * Entity representing a registered trigger.
- * Stores configuration for webhook, scheduler, and email triggers.
- */
 @Getter
 @Setter
 @ToString
@@ -40,49 +36,25 @@ public class TriggerRegistration {
     @Column(nullable = false)
     private UUID userId;
 
-    /**
-     * Type of trigger: webhook, scheduler, or email
-     */
     @Column(nullable = false)
     private String triggerType;
 
-    /**
-     * Configuration specific to the trigger type.
-     * For webhook: may contain validation rules, response templates
-     * For scheduler: contains cron expression or interval
-     * For email: contains email address, subject filter, etc.
-     */
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private Map<String, Object> configuration;
 
-    /**
-     * Whether this trigger is currently active
-     */
     @Builder.Default
     @Column(nullable = false)
     private boolean enabled = true;
 
-    /**
-     * For webhook triggers: the unique URL path
-     */
     @Column(unique = true)
     private String webhookUrl;
 
-    /**
-     * For webhook triggers: authentication token
-     */
     @Column(unique = true)
     private String webhookToken;
 
-    /**
-     * Last time this trigger was fired
-     */
     private Instant lastTriggeredAt;
 
-    /**
-     * For scheduler triggers: next scheduled execution time
-     */
     private Instant nextScheduledAt;
 
     @Column(nullable = false, updatable = false)

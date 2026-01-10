@@ -70,4 +70,3 @@ Google Sheets action config:
 ## Development Notes
 - Standard Maven layout per service (`src/main/java`, `src/test/java`).
 - PostgreSQL for core services; MongoDB for logs.
-- See `AGENTS.md` for contributor guidelines.

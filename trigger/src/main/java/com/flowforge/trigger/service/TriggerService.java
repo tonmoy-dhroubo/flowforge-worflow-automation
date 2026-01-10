@@ -13,10 +13,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-/**
- * Main service for managing trigger registrations.
- * Handles CRUD operations for all trigger types.
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -27,10 +23,6 @@ public class TriggerService {
     private final SchedulerTriggerService schedulerTriggerService;
     private final EmailTriggerService emailTriggerService;
 
-    /**
-     * Creates a new trigger registration.
-     * Delegates to specific trigger services based on type.
-     */
     @Transactional
     public TriggerRegistrationDto createTrigger(TriggerRegistrationDto dto) {
         log.info("Creating new trigger: workflowId={}, type={}", dto.getWorkflowId(), dto.getTriggerType());
@@ -43,7 +35,6 @@ public class TriggerService {
                 .enabled(dto.isEnabled())
                 .build();
 
-        // Delegate to specific trigger service for type-specific setup
         switch (dto.getTriggerType().toLowerCase()) {
             case "webhook":
                 trigger = webhookTriggerService.setupWebhookTrigger(trigger);
@@ -64,9 +55,6 @@ public class TriggerService {
         return toDto(saved);
     }
 
-    /**
-     * Retrieves all triggers for a user
-     */
     @Transactional(readOnly = true)
     public List<TriggerRegistrationDto> getTriggersForUser(UUID userId) {
         log.info("Fetching triggers for user: userId={}", userId);
@@ -75,9 +63,6 @@ public class TriggerService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Retrieves all triggers for a workflow
-     */
     @Transactional(readOnly = true)
     public List<TriggerRegistrationDto> getTriggersForWorkflow(UUID workflowId) {
         log.info("Fetching triggers for workflow: workflowId={}", workflowId);
@@ -86,9 +71,6 @@ public class TriggerService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Updates a trigger registration
-     */
     @Transactional
     public TriggerRegistrationDto updateTrigger(UUID triggerId, TriggerRegistrationDto dto, UUID userId) {
         log.info("Updating trigger: triggerId={}", triggerId);
@@ -96,7 +78,6 @@ public class TriggerService {
         TriggerRegistration trigger = triggerRepository.findById(triggerId)
                 .orElseThrow(() -> new IllegalArgumentException("Trigger not found: " + triggerId));
 
-        // Verify ownership
         if (!trigger.getUserId().equals(userId)) {
             throw new SecurityException("User does not own this trigger");
         }
@@ -104,7 +85,6 @@ public class TriggerService {
         trigger.setConfiguration(dto.getConfiguration());
         trigger.setEnabled(dto.isEnabled());
 
-        // Update type-specific fields if needed
         if ("scheduler".equals(trigger.getTriggerType())) {
             trigger = schedulerTriggerService.updateSchedulerTrigger(trigger);
         }
@@ -115,9 +95,6 @@ public class TriggerService {
         return toDto(updated);
     }
 
-    /**
-     * Deletes a trigger registration
-     */
     @Transactional
     public void deleteTrigger(UUID triggerId, UUID userId) {
         log.info("Deleting trigger: triggerId={}", triggerId);
@@ -125,7 +102,6 @@ public class TriggerService {
         TriggerRegistration trigger = triggerRepository.findById(triggerId)
                 .orElseThrow(() -> new IllegalArgumentException("Trigger not found: " + triggerId));
 
-        // Verify ownership
         if (!trigger.getUserId().equals(userId)) {
             throw new SecurityException("User does not own this trigger");
         }
@@ -134,9 +110,6 @@ public class TriggerService {
         log.info("Successfully deleted trigger: id={}", triggerId);
     }
 
-    /**
-     * Marks a trigger as fired and updates last triggered time
-     */
     @Transactional
     public void markTriggerFired(UUID triggerId) {
         triggerRepository.findById(triggerId).ifPresent(trigger -> {
@@ -145,9 +118,6 @@ public class TriggerService {
         });
     }
 
-    /**
-     * Converts entity to DTO
-     */
     private TriggerRegistrationDto toDto(TriggerRegistration trigger) {
         return TriggerRegistrationDto.builder()
                 .id(trigger.getId())

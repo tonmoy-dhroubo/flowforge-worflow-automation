@@ -15,10 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Controller for handling incoming webhook requests.
- * Each workflow with a webhook trigger gets a unique URL.
- */
 @RestController
 @RequestMapping("/webhook")
 @RequiredArgsConstructor
@@ -29,10 +25,6 @@ public class WebhookController {
     private final WebhookTriggerService webhookTriggerService;
     private final TriggerService triggerService;
 
-    /**
-     * Handles incoming webhook requests.
-     * The webhook token is part of the URL path.
-     */
     @PostMapping("/{webhookToken}")
     public ResponseEntity<Map<String, Object>> handleWebhook(
             @PathVariable String webhookToken,
@@ -43,11 +35,9 @@ public class WebhookController {
                 webhookToken, request.getMethod());
 
         try {
-            // Find trigger by webhook token
             TriggerRegistration trigger = triggerRepository.findByWebhookToken(webhookToken)
                     .orElseThrow(() -> new IllegalArgumentException("Invalid webhook token"));
 
-            // Build webhook payload
             WebhookPayloadDto payload = WebhookPayloadDto.builder()
                     .headers(webhookTriggerService.extractHeaders(request))
                     .queryParams(webhookTriggerService.extractQueryParams(request))
@@ -56,13 +46,10 @@ public class WebhookController {
                     .remoteAddress(request.getRemoteAddr())
                     .build();
 
-            // Process the webhook
             webhookTriggerService.processWebhookRequest(trigger, payload);
 
-            // Mark trigger as fired
             triggerService.markTriggerFired(trigger.getId());
 
-            // Return success response
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Webhook received and processing");
@@ -86,9 +73,6 @@ public class WebhookController {
         }
     }
 
-    /**
-     * Handles GET requests to webhooks (for simple triggers like status checks)
-     */
     @GetMapping("/{webhookToken}")
     public ResponseEntity<Map<String, Object>> handleWebhookGet(
             @PathVariable String webhookToken,

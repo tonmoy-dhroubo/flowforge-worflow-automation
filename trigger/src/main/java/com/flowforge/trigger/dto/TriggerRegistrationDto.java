@@ -9,16 +9,12 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * DTO for trigger registration information.
- * Used when creating or updating trigger configurations.
- */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class TriggerRegistrationDto {
-    
+
     private UUID id;
     private UUID workflowId;
     private UUID userId;

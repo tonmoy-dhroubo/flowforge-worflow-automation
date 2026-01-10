@@ -12,10 +12,6 @@ import org.springframework.stereotype.Service;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-/**
- * Service responsible for publishing trigger events to Kafka.
- * This is the bridge between trigger services and the orchestrator.
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -26,17 +22,10 @@ public class TriggerEventPublisher {
     @Value("${kafka.topic.trigger-events}")
     private String triggerEventsTopic;
 
-    /**
-     * Publishes a trigger event to Kafka.
-     * The orchestrator service will consume this event and start workflow execution.
-     *
-     * @param event The trigger event to publish
-     */
     public void publishTriggerEvent(TriggerEvent event) {
         log.info("Publishing trigger event: eventId={}, triggerId={}, workflowId={}, type={}", 
                 event.getEventId(), event.getTriggerId(), event.getWorkflowId(), event.getTriggerType());
 
-        // Convert domain event to DTO
         TriggerEventDto dto = TriggerEventDto.builder()
                 .eventId(event.getEventId())
                 .triggerId(event.getTriggerId())
@@ -48,10 +37,8 @@ public class TriggerEventPublisher {
                 .metadata(event.getMetadata())
                 .build();
 
-        // Use workflow ID as the key for partitioning
         String key = event.getWorkflowId().toString();
 
-        // Send to Kafka asynchronously
         CompletableFuture<SendResult<String, Object>> future = 
                 kafkaTemplate.send(triggerEventsTopic, key, dto);
 
@@ -68,13 +55,6 @@ public class TriggerEventPublisher {
         });
     }
 
-    /**
-     * Publishes a trigger event synchronously (blocks until sent).
-     * Use this for critical triggers where you need confirmation of delivery.
-     *
-     * @param event The trigger event to publish
-     * @return true if published successfully, false otherwise
-     */
     public boolean publishTriggerEventSync(TriggerEvent event) {
         try {
             log.info("Publishing trigger event synchronously: eventId={}", event.getEventId());

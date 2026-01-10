@@ -11,11 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Controller for managing trigger registrations.
- * Provides CRUD operations for triggers.
- * Requires X-User-Id header from API Gateway for authentication.
- */
 @RestController
 @RequestMapping("/api/v1/triggers")
 @RequiredArgsConstructor
@@ -26,9 +21,6 @@ public class TriggerManagementController {
 
     private static final String USER_ID_HEADER = "X-User-Id";
 
-    /**
-     * Creates a new trigger registration
-     */
     @PostMapping
     public ResponseEntity<TriggerRegistrationDto> createTrigger(
             @RequestBody TriggerRegistrationDto request,
@@ -43,9 +35,6 @@ public class TriggerManagementController {
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
-    /**
-     * Gets all triggers for the authenticated user
-     */
     @GetMapping
     public ResponseEntity<List<TriggerRegistrationDto>> getTriggersForUser(
             @RequestHeader(USER_ID_HEADER) UUID userId) {
@@ -56,9 +45,6 @@ public class TriggerManagementController {
         return ResponseEntity.ok(triggers);
     }
 
-    /**
-     * Gets all triggers for a specific workflow
-     */
     @GetMapping("/workflow/{workflowId}")
     public ResponseEntity<List<TriggerRegistrationDto>> getTriggersForWorkflow(
             @PathVariable UUID workflowId,
@@ -67,7 +53,6 @@ public class TriggerManagementController {
         log.info("Fetching triggers for workflow: workflowId={}, userId={}", workflowId, userId);
         List<TriggerRegistrationDto> triggers = triggerService.getTriggersForWorkflow(workflowId);
 
-        // Filter to only return triggers owned by this user
         List<TriggerRegistrationDto> userTriggers = triggers.stream()
                 .filter(t -> t.getUserId().equals(userId))
                 .toList();
@@ -75,9 +60,6 @@ public class TriggerManagementController {
         return ResponseEntity.ok(userTriggers);
     }
 
-    /**
-     * Updates a trigger registration
-     */
     @PutMapping("/{triggerId}")
     public ResponseEntity<TriggerRegistrationDto> updateTrigger(
             @PathVariable UUID triggerId,
@@ -90,9 +72,6 @@ public class TriggerManagementController {
         return ResponseEntity.ok(updated);
     }
 
-    /**
-     * Deletes a trigger registration
-     */
     @DeleteMapping("/{triggerId}")
     public ResponseEntity<Void> deleteTrigger(
             @PathVariable UUID triggerId,

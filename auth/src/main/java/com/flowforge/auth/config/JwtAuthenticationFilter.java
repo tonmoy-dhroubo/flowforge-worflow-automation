@@ -55,9 +55,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
-            // Handle exceptions like ExpiredJwtException, SignatureException, etc.
-            // For now, we just let the request continue without authentication.
-            // A proper error response can be configured using an AuthenticationEntryPoint.
         }
         
         filterChain.doFilter(request, response);

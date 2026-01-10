@@ -24,9 +24,7 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints that do not require authentication
                         .requestMatchers("/auth/register", "/auth/login", "/auth/refresh-token").permitAll()
-                        // All other endpoints must be authenticated
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

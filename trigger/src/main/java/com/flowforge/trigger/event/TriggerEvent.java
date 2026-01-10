@@ -9,16 +9,12 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Domain event representing a trigger that has been fired.
- * This is the internal representation before being converted to DTO for Kafka.
- */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class TriggerEvent {
-    
+
     private UUID eventId;
     private UUID triggerId;
     private UUID workflowId;

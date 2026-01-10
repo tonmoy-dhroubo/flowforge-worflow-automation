@@ -13,19 +13,12 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Kafka Producer Configuration.
- * Configures how trigger events are sent to Kafka topics.
- */
 @Configuration
 public class KafkaProducerConfig {
 
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
-    /**
-     * Creates a producer factory with JSON serialization for trigger events.
-     */
     @Bean
     public ProducerFactory<String, Object> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
@@ -40,9 +33,6 @@ public class KafkaProducerConfig {
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
-    /**
-     * Creates a KafkaTemplate for sending messages.
-     */
     @Bean
     public KafkaTemplate<String, Object> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());

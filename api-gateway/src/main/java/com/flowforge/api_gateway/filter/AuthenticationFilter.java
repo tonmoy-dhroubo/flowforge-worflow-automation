@@ -22,7 +22,6 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> ReactiveSecurityContextHolder.getContext()
                 .flatMap(securityContext -> {
-                    // The security context is populated by the oauth2 resource server filter
                     log.info("AuthenticationFilter is running for request to: {}", exchange.getRequest().getURI());
                     System.out.println("AuthenticationFilter is running for request to: " + exchange.getRequest().getURI());
                     if (securityContext.getAuthentication() != null && securityContext.getAuthentication().getPrincipal() instanceof Jwt) {
@@ -34,14 +33,12 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                             return onError(exchange, "JWT token is missing user_id claim", HttpStatus.UNAUTHORIZED);
                         }
 
-                        // Add the user_id as a header for downstream services
                         ServerWebExchange modifiedExchange = exchange.mutate()
                                 .request(request -> request.header("X-User-Id", userId))
                                 .build();
 
                         return chain.filter(modifiedExchange);
                     }
-                    // If there's no authentication object, it's a public route, pass it through.
                     return chain.filter(exchange);
                 });
     }
@@ -52,6 +49,5 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
     }
 
     public static class Config {
-        // Configuration properties can be added here if needed
     }
 }

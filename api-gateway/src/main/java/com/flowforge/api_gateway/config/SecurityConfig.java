@@ -17,7 +17,6 @@ import javax.crypto.spec.SecretKeySpec;
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
-    // You still need to read the secret key from your application.yml
     @Value("${application.security.jwt.secret-key}")
     private String jwtSecretKey;
 
@@ -26,9 +25,7 @@ public class SecurityConfig {
         http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchange -> exchange
-                        // Public endpoints
                         .pathMatchers("/auth/register", "/auth/login", "/auth/refresh-token").permitAll()
-                        // All other requests must be authenticated
                         .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
@@ -36,15 +33,9 @@ public class SecurityConfig {
         return http.build();
     }
 
-    /**
-     * This is the new bean that resolves the startup error.
-     * It provides a reactive JWT decoder that Spring Security can use.
-     */
     @Bean
     public ReactiveJwtDecoder reactiveJwtDecoder() {
-        // We use the same secret key from the auth-service
         SecretKeySpec secretKey = new SecretKeySpec(jwtSecretKey.getBytes(), "HmacSHA256");
-        // Use NimbusReactiveJwtDecoder for symmetric keys
         return NimbusReactiveJwtDecoder.withSecretKey(secretKey).build();
     }
 }

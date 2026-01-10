@@ -13,10 +13,6 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 import java.util.List;
 
-/**
- * Scheduled executor that checks for and fires scheduler triggers.
- * Runs periodically to check if any scheduled triggers are due for execution.
- */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -29,10 +25,6 @@ public class ScheduledTriggerExecutor {
     @Value("${scheduler.enabled:true}")
     private boolean schedulerEnabled;
 
-    /**
-     * Checks for and executes scheduled triggers.
-     * Runs every minute (configurable via scheduler.check-interval property).
-     */
     @Scheduled(fixedDelayString = "${scheduler.check-interval:60000}")
     public void checkAndExecuteScheduledTriggers() {
         if (!schedulerEnabled) {
@@ -55,14 +47,11 @@ public class ScheduledTriggerExecutor {
 
             for (TriggerRegistration trigger : triggersToExecute) {
                 try {
-                    // Process the trigger
                     schedulerTriggerService.processScheduledTrigger(trigger);
 
-                    // Calculate and update next scheduled time
                     TriggerRegistration updated = schedulerTriggerService.updateSchedulerTrigger(trigger);
                     triggerRepository.save(updated);
 
-                    // Mark as fired
                     triggerService.markTriggerFired(trigger.getId());
 
                     log.info("Successfully executed scheduled trigger: triggerId={}, nextRun={}", 

@@ -25,7 +25,6 @@ spring:
     consumer:
       group-id: orchestrator-group
       auto-offset-reset: earliest
-      # FIXED: Use StringDeserializer to handle multiple DTO types on different topics
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:

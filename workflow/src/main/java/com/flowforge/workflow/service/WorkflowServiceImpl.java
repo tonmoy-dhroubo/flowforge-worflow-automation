@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 public class WorkflowServiceImpl implements WorkflowService {
 
     private final WorkflowRepository workflowRepository;
-    // We still need ObjectMapper for mapping between DTOs and Maps, but not for DB interaction
     private final ObjectMapper objectMapper;
 
     @Override
@@ -30,8 +29,6 @@ public class WorkflowServiceImpl implements WorkflowService {
                 .name(request.name())
                 .userId(userId)
                 .enabled(request.enabled())
-                // --- SIMPLIFIED LOGIC ---
-                // No more toJson(). Just a simple assignment.
                 .triggerDefinition(objectMapper.convertValue(request.trigger(),
                         new TypeReference<Map<String, Object>>() {}))
                 .actionsDefinition(request.actions().stream()
@@ -85,10 +82,6 @@ public class WorkflowServiceImpl implements WorkflowService {
         }
         workflowRepository.deleteById(workflowId);
     }
-
-    // --- HELPER METHODS ---
-    // The old toJson() and fromJson() methods are GONE!
-    // The mapping logic is now much cleaner.
 
     private WorkflowResponse toWorkflowResponse(Workflow workflow) {
         return new WorkflowResponse(

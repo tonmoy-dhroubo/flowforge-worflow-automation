@@ -34,9 +34,6 @@ public class Workflow {
     @Builder.Default
     private boolean enabled = true;
 
-    // --- THIS IS THE CHANGE ---
-    // Instead of String, we use a native Java type.
-    // Hibernate 6 handles the JSON conversion automatically with this annotation.
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private Map<String, Object> triggerDefinition;
@@ -44,7 +41,6 @@ public class Workflow {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private List<Map<String, Object>> actionsDefinition;
-    // --- END OF CHANGE ---
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;

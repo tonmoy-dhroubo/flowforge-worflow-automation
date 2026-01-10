@@ -33,14 +33,10 @@ public class OrchestrationService {
         UUID userId = triggerEvent.getUserId();
 
         workflowServiceClient.getWorkflowById(workflowId, userId)
-                // =============================================== #
-                // == THIS IS THE FIX: Add error handling block == #
-                // =============================================== #
                 .doOnError(WebClientResponseException.NotFound.class, e -> {
                     log.error("Workflow not found for id: {}. Cannot start execution.", workflowId);
                 })
-                .onErrorResume(WebClientResponseException.NotFound.class, e -> Mono.empty()) // Stop processing if not found
-                // =============================================== #
+                .onErrorResume(WebClientResponseException.NotFound.class, e -> Mono.empty())
                 .subscribe(workflowResponse -> {
                     if (!workflowResponse.isEnabled()) {
                         log.warn("Workflow {} is disabled. Skipping execution.", workflowId);
@@ -59,7 +55,6 @@ public class OrchestrationService {
                     WorkflowExecution savedExecution = executionRepository.save(execution);
                     log.info("Created new workflow execution: id={}", savedExecution.getId());
 
-                    // Start the first step
                     executeStep(savedExecution, workflowResponse.getActions());
                 });
     }
@@ -76,16 +71,12 @@ public class OrchestrationService {
             return;
         }
 
-        // Store the output of the completed step
         execution.getStepOutputs().put("step_" + result.getStepIndex(), result.getOutput());
 
-        // Increment to the next step
         execution.setCurrentStep(result.getStepIndex() + 1);
         executionRepository.save(execution);
 
-        // Fetch workflow definition again to proceed
         workflowServiceClient.getWorkflowById(execution.getWorkflowId(), execution.getUserId())
-                // Also add error handling here for robustness
                 .doOnError(WebClientResponseException.NotFound.class, e -> {
                     log.error("Workflow not found for id: {}. Halting execution for id: {}", execution.getWorkflowId(), execution.getId());
                     execution.setStatus(ExecutionStatus.FAILED);

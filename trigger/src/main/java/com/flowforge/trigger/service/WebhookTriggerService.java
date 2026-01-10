@@ -15,10 +15,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.Enumeration;
 
-/**
- * Service for handling webhook triggers.
- * Generates unique webhook URLs and processes incoming webhook requests.
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -29,17 +25,11 @@ public class WebhookTriggerService {
     @Value("${webhook.base-url}")
     private String webhookBaseUrl;
 
-    /**
-     * Sets up a new webhook trigger.
-     * Generates a unique URL and authentication token.
-     */
     public TriggerRegistration setupWebhookTrigger(TriggerRegistration trigger) {
         log.info("Setting up webhook trigger for workflow: {}", trigger.getWorkflowId());
 
-        // Generate unique webhook token
         String webhookToken = UUID.randomUUID().toString();
-        
-        // Generate webhook URL path
+
         String webhookPath = "/webhook/" + webhookToken;
         String fullWebhookUrl = webhookBaseUrl + webhookPath;
 
@@ -50,10 +40,6 @@ public class WebhookTriggerService {
         return trigger;
     }
 
-    /**
-     * Processes an incoming webhook request.
-     * Validates the token and publishes a trigger event.
-     */
     public void processWebhookRequest(TriggerRegistration trigger, WebhookPayloadDto payload) {
         log.info("Processing webhook request for trigger: {}", trigger.getId());
 
@@ -62,7 +48,6 @@ public class WebhookTriggerService {
             return;
         }
 
-        // Create trigger event
         TriggerEvent event = TriggerEvent.builder()
                 .eventId(UUID.randomUUID())
                 .triggerId(trigger.getId())
@@ -74,15 +59,11 @@ public class WebhookTriggerService {
                 .metadata(buildWebhookMetadata(payload))
                 .build();
 
-        // Publish to Kafka
         eventPublisher.publishTriggerEvent(event);
 
         log.info("Successfully processed webhook trigger: eventId={}", event.getEventId());
     }
 
-    /**
-     * Converts webhook payload to a map for the trigger event
-     */
     private Map<String, Object> convertPayloadToMap(WebhookPayloadDto payload) {
         Map<String, Object> map = new HashMap<>();
         map.put("body", payload.getBody());
@@ -92,9 +73,6 @@ public class WebhookTriggerService {
         return map;
     }
 
-    /**
-     * Builds metadata for webhook trigger events
-     */
     private Map<String, Object> buildWebhookMetadata(WebhookPayloadDto payload) {
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("source", "webhook");
@@ -104,10 +82,6 @@ public class WebhookTriggerService {
         return metadata;
     }
 
-    /**
-     * Extracts HTTP headers from the request.
-     * Moved from controller to centralize webhook request parsing here.
-     */
     public Map<String, String> extractHeaders(HttpServletRequest request) {
         Map<String, String> headers = new HashMap<>();
         Enumeration<String> headerNames = request.getHeaderNames();
@@ -118,10 +92,6 @@ public class WebhookTriggerService {
         return headers;
     }
 
-    /**
-     * Extracts query parameters from the request.
-     * Moved from controller to centralize webhook request parsing here.
-     */
     public Map<String, String> extractQueryParams(HttpServletRequest request) {
         Map<String, String> params = new HashMap<>();
         request.getParameterMap().forEach((key, values) -> {
