@@ -1,6 +1,1 @@
-/.idea/
-/archives/
-/qodana.yaml
-*.js
-# Development configuration
-**/src/main/resources/application-*.yml
+.run/

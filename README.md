@@ -36,11 +36,16 @@ Each service uses `src/main/resources/application.yml`. Local overrides should u
 Common env vars:
 ```bash
 SPRING_PROFILES_ACTIVE=dev
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/flowforge
-SPRING_DATASOURCE_USERNAME=flowforge
-SPRING_DATASOURCE_PASSWORD=password
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/devdb
+SPRING_DATASOURCE_USERNAME=dev
+SPRING_DATASOURCE_PASSWORD=devpass
 APPLICATION_SECURITY_JWT_SECRET_KEY=dev-secret
 KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+```
+
+Database setup (creates and seeds devdb):
+```bash
+./db/setup_db.sh
 ```
 
 Email polling (trigger service):

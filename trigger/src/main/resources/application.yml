@@ -6,11 +6,14 @@ spring:
     name: trigger-service
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
+  config:
+    import: "classpath:/common-application.yml"
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/flowforge}
-    username: ${SPRING_DATASOURCE_USERNAME:flowforge}
-    password: ${SPRING_DATASOURCE_PASSWORD:password}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${flowforge.datasource.host}/${flowforge.datasource.db-name}?${flowforge.datasource.params}}
+    username: ${flowforge.datasource.username}
+    password: ${flowforge.datasource.password}
+    driver-class-name: ${flowforge.datasource.driver-class-name}
 
   jpa:
     hibernate:

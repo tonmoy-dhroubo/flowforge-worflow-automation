@@ -15,6 +15,10 @@
     <description>Orchestrates workflow execution based on triggers.</description>
 
     <dependencies>
+        <dependency>
+            <groupId>com.flowforge</groupId>
+            <artifactId>common</artifactId>
+        </dependency>
         <!-- Spring Boot Starters -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

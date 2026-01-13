@@ -1,0 +1,52 @@
+INSERT INTO trigger_service.trigger_registrations (
+  id,
+  workflow_id,
+  user_id,
+  trigger_type,
+  configuration,
+  enabled,
+  webhook_url,
+  webhook_token,
+  last_triggered_at,
+  next_scheduled_at,
+  created_at,
+  updated_at
+) VALUES (
+  'c2c79d0b-8f5e-4e42-bc0a-69f25a2de941',
+  '2e9d6fcb-3f9b-4a72-9f75-7b7a2a4c5db1',
+  '0f4b3f1a-54e0-4c4b-9c5b-6f0fdc0d8a11',
+  'webhook',
+  '{"method":"POST"}'::jsonb,
+  true,
+  'http://localhost:8083/webhook/demo-token',
+  'demo-token',
+  NULL,
+  NULL,
+  now(),
+  now()
+),
+(
+  '7d7b0e15-6125-4cc2-b3c4-9b7e47a6e9ff',
+  '1b4c1d5a-9ad0-4d4f-8d2a-5611d8899a70',
+  '0f4b3f1a-54e0-4c4b-9c5b-6f0fdc0d8a11',
+  'scheduler',
+  '{"intervalMinutes":15}'::jsonb,
+  true,
+  NULL,
+  NULL,
+  NULL,
+  now() + interval '15 minutes',
+  now(),
+  now()
+)
+ON CONFLICT (id) DO UPDATE SET
+  workflow_id = EXCLUDED.workflow_id,
+  user_id = EXCLUDED.user_id,
+  trigger_type = EXCLUDED.trigger_type,
+  configuration = EXCLUDED.configuration,
+  enabled = EXCLUDED.enabled,
+  webhook_url = EXCLUDED.webhook_url,
+  webhook_token = EXCLUDED.webhook_token,
+  last_triggered_at = EXCLUDED.last_triggered_at,
+  next_scheduled_at = EXCLUDED.next_scheduled_at,
+  updated_at = now();

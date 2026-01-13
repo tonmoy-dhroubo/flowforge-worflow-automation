@@ -1,0 +1,6 @@
+flowforge:
+  datasource:
+    host: localhost:5432
+    db-name: devdb
+    params: sslmode=require&channelBinding=require
+    driver-class-name: org.postgresql.Driver

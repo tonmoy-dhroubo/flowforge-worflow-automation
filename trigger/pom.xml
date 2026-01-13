@@ -18,6 +18,10 @@
     <description>Trigger Service for FlowForge - Handles webhook, scheduler, and email triggers</description>
 
     <dependencies>
+        <dependency>
+            <groupId>com.flowforge</groupId>
+            <artifactId>common</artifactId>
+        </dependency>
         <!-- Spring Boot Starters -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
